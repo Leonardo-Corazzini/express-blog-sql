@@ -1,19 +1,16 @@
-const posts = require('../data/posts.js')
-let lastIndex = posts.at(-1).id
 
+const connection = require('../data/db.js')
+
+// Index
 function index(req, res) {
 
-    let filteredPosts = posts
+    const sql = 'SELECT * FROM posts';
 
-    if (req.query.tag) {
-
-        filteredPosts = posts.filter((post) => post.tags.includes(req.query.tag))
-    }
-
-    res.json(filteredPosts)
-
+    connection.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database query failed' });
+        res.json(results);
+    });
 }
-
 function show(req, res) {
     const id = req.params.id
     console.log(`Post con id: ${id}`)
