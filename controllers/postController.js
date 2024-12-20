@@ -1,7 +1,7 @@
 
 const connection = require('../data/db.js')
 
-// Index
+
 function index(req, res) {
 
     const sql = 'SELECT * FROM posts';
@@ -12,27 +12,16 @@ function index(req, res) {
     });
 }
 function show(req, res) {
+
     const id = req.params.id
-    console.log(`Post con id: ${id}`)
-    let post
-
-    if (!isNaN(parseInt(id))) {
-        post = posts.find((p) => p.id === parseInt(id))
-    } else {
-        post = posts.find((p) => p.slug === id)
-    }
-
-
-
-    if (!post) {
-        res.status(404)
-        res.json({
-            error: "Post not found",
-            message: `Post non trovato`
-        })
-    }
-    res.json(post)
+    const sql = 'SELECT * FROM posts WHERE id = ?';
+    connection.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database query failed' });
+        if (results.length === 0) return res.status(404).json({ error: 'Post not found' });
+        res.json(results[0]);
+    });
 }
+
 
 function store(req, res) {
     const { title, slug, content, image, tags, published } = req.body
@@ -109,28 +98,13 @@ function modify(req, res) {
 }
 
 function destroy(req, res) {
-    const id = req.params.id
-    let postIndex
-    if (!isNaN(parseInt(id))) {
-        postIndex = posts.findIndex((post) => post.id === parseInt(id))
-    } else {
-        postIndex = posts.findIndex((post) => post.slug === id)
-    }
 
+    const { id } = req.params;
 
-    if (postIndex === -1) {
-        res.status(404)
-        console.log(`Post con id: ${id} non trovato`)
-        return res.json({
-            error: 'Post not found',
-            message: `Post con id: ${id} non trovato`
-        })
-    }
-
-
-    posts.splice(postIndex, 1)
-    console.log(`Elimino il post con id: ${id}`)
-    res.sendStatus(204)
+    connection.query('DELETE FROM posts WHERE id = ?', [id], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to delete post' });
+        res.sendStatus(204)
+    });
 }
 module.exports = { index, show, store, update, modify, destroy }
 
